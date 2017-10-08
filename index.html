@@ -189,10 +189,11 @@ go.onclick = e => {
   }
 
   scores.sort((a,b)=>a[1]<b[1]);
+  scores.sort((a,b)=>a[1]<b[1]);
   
   result.innerHTML = "<h2>This looks like...";
   for(i = 0; i < 5; i++){
-    result.innerHTML += '"' + String.fromCharCode(scores[i][0]) + '" : ' + parseInt(scores[i][1]) + "%" + "<br>";
+    result.innerHTML += '<b>' + String.fromCharCode(scores[i][0]) + '</b> : ' + parseInt(scores[i][1]) + "%" + "<br>";
   }
   
   A.width = A.width;
@@ -207,3 +208,4 @@ reset.onclick = () => {
 }
 
 </script>
+<style>* { font-family: arial }</style>
