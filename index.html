@@ -1,0 +1,209 @@
+<!doctype html>
+<meta charset=utf-8>
+<h1 style="margin:5px 0">MiniShapeCatcher</h1>
+<p>Draw an ASCII char, I'll try to find which one it is!</p>
+<canvas id=draw style="border:1px solid;position:absolute;top:100px" onmousedown=z="lineTo" onmouseup=z="moveTo" onmousemove=with(event)Z=getContext`2d`,Z.lineWidth=10,Z[z](pageX-8,pageY-100),Z.stroke()></canvas>
+<p><button id=go style="position:absolute;top:270px">GO!</button></p>
+<p><button id=reset style="position:absolute;top:270px;left:60px;">reset</button></p>
+
+<canvas id=a width=40 height=40 style="position:absolute;top:-1000px;border:1px solid;width:100px;"></canvas>
+<canvas id=A width=40 height=40 style="position:absolute;top:100px;left:310px;width:100px;"></canvas>
+
+<p id=result style="position:absolute;top:290px"></p>
+<script>
+
+// Canvas contexts
+c=a.getContext("2d");
+C=A.getContext("2d");
+ctx = draw.getContext("2d");
+
+chars = [];
+
+// Loop on all chars from 32 to 127 (ASCII)
+for(ch = 32; ch < 127; ch++){
+
+  // Reset canvas
+  a.width=a.width;
+  A.width=A.width;
+  
+  // Reset current char pattern
+  chars[ch] = [];
+  
+  // Draw letter on first canvas
+  c.font="30px arial";
+  c.textAlign="center";
+  c.fillText(String.fromCodePoint(ch),20.5,32.5);
+  
+  // Get canvas pixels
+  d=c.getImageData(0,0,40,40);
+  
+  // Reset top, left, right, bottom bounds
+  t=l=0;
+  r=b=40;
+
+  // Loop on all lines and columns of pixels to get char bounds
+  // From top (increment t)
+  loopy: for(y=0;y<40;y++){
+    loopx: for(x=0;x<40;x++){
+      if(d.data[4*40*y + 4*x] || d.data[4*40*y + 4*x + 1] || d.data[4*40*y + 4*x + 2] || d.data[4*40*y + 4*x + 3]){
+        break loopy;
+      }
+    }
+    t++;
+  }
+
+  // From bottom (decrement t)
+  loopy: for(y=40;y>0;y--){
+    loopx: for(x=0;x<40;x++){
+      if(d.data[4*40*y + 4*x] || d.data[4*40*y + 4*x + 1] || d.data[4*40*y + 4*x + 2] || d.data[4*40*y + 4*x + 3]){
+        break loopy;
+      }
+    }
+    b--;
+  }
+
+  // From left (increment l)
+  loopx: for(x=0;x<40;x++){
+    loopy: for(y=0;y<40;y++){
+      if(d.data[4*40*y + 4*x] || d.data[4*40*y + 4*x + 1] || d.data[4*40*y + 4*x + 2] || d.data[4*40*y + 4*x + 3]){
+        break loopx;
+      }
+    }
+    l++;
+  }
+
+  // From right (decrement r)
+  loopx: for(x=40;x>0;x--){
+    loopy: for(y=0;y<40;y++){
+      if(d.data[4*40*y + 4*x] || d.data[4*40*y + 4*x + 1] || d.data[4*40*y + 4*x + 2] || d.data[4*40*y + 4*x + 3]){
+        break loopx;
+      }
+    }
+    r--;
+  }
+
+  // Reset bounds if char is empty
+  if(t>b){
+    t=l=0;
+    b=r=40;
+  }
+
+  // Draw the char on the second canvas, distorted to have no bounds 
+  C.drawImage(a,l,t,r-l+1,b-t+1,0,0,40,40);
+  
+  // Get canvas pixels
+  D=C.getImageData(0,0,40,40);
+  
+  // Save chars pattern (1600 x 0 or 1)
+  loopy: for(y=0;y<40;y++){
+    loopx: for(x=0;x<40;x++){
+      chars[ch][y*40+x] = 0;
+      if(D.data[4*40*y + 4*x] || D.data[4*40*y + 4*x + 1] || D.data[4*40*y + 4*x + 2] || D.data[4*40*y + 4*x + 3]){
+        chars[ch][y*40+x] = 1;
+      }
+    }
+  }
+  
+  A.width = A.width;
+
+}
+
+// GO!
+go.onclick = e => {
+
+  scores = [];
+  
+  // Reset canvas
+  a.width=a.width;
+  A.width=A.width;
+  
+  // Find drawing bounds
+  d=ctx.getImageData(0,0,300,150);
+  t=l=0;
+  r=300;
+  b=150;
+  loopy: for(y=0;y<150;y++){
+    loopx: for(x=0;x<300;x++){
+      if(d.data[4*300*y + 4*x] || d.data[4*300*y + 4*x + 1] || d.data[4*300*y + 4*x + 2] || d.data[4*300*y + 4*x + 3]){
+        break loopy;
+      }
+    }
+    t++;
+  }
+  loopy: for(y=150;y>0;y--){
+    loopx: for(x=0;x<300;x++){
+      if(d.data[4*300*y + 4*x] || d.data[4*300*y + 4*x + 1] || d.data[4*300*y + 4*x + 2] || d.data[4*300*y + 4*x + 3]){
+        break loopy;
+      }
+    }
+    b--;
+  }
+  loopx: for(x=0;x<300;x++){
+    loopy: for(y=0;y<150;y++){
+      if(d.data[4*300*y + 4*x] || d.data[4*300*y + 4*x + 1] || d.data[4*300*y + 4*x + 2] || d.data[4*300*y + 4*x + 3]){
+        break loopx;
+      }
+    }
+    l++;
+  }
+  loopx: for(x=300;x>0;x--){
+    loopy: for(y=0;y<150;y++){
+      if(d.data[4*300*y + 4*x] || d.data[4*300*y + 4*x + 1] || d.data[4*300*y + 4*x + 2] || d.data[4*300*y + 4*x + 3]){
+        break loopx;
+      }
+    }
+    r--;
+  }
+  if(t>b){
+    t=l=0;
+    b=150;
+    r=300;
+  }
+  
+  // Draw it on the canvas A
+  C.drawImage(draw,l,t,r-l+1,b-t+1,0,0,40,40);
+  
+  // Save its pattern
+  pattern = [];
+  D=C.getImageData(0,0,40,40);
+  loopy: for(y=0;y<40;y++){
+    loopx: for(x=0;x<40;x++){
+      pattern[y*40+x] = 0;
+      if(D.data[4*40*y + 4*x] || D.data[4*40*y + 4*x + 1] || D.data[4*40*y + 4*x + 2] || D.data[4*40*y + 4*x + 3]){
+        pattern[y*40+x] = 1;
+      }
+    }
+  }
+
+
+  for(ch = 33; ch < 127; ch++){
+    if(chars[ch]){
+      score=0;
+      for(x=0;x<1600;x++){
+        if(chars[ch][x] == pattern[x]) score++;
+        else score--;
+      }
+      score /= 16;
+      scores[ch]=[ch, score];
+    }
+  }
+
+  scores.sort((a,b)=>a[1]<b[1]);
+  
+  result.innerHTML = "<h2>This looks like...";
+  for(i = 0; i < 5; i++){
+    result.innerHTML += '"' + String.fromCharCode(scores[i][0]) + '" : ' + parseInt(scores[i][1]) + "%" + "<br>";
+  }
+  
+  A.width = A.width;
+  
+}
+
+reset.onclick = () => {
+  draw.width = draw.width;
+  a.width = a.width;
+  A.width = A.width;
+  result.innerHTML="";
+}
+
+</script>
